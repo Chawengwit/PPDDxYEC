@@ -90,7 +90,8 @@
   .stars{color:var(--warn);font-weight:700;font-size:13px;white-space:nowrap}
   .subtle{font-size:12px;color:var(--ink-3)}
   .rate-cell{font-family:var(--mono);font-weight:800;font-size:14.5px}
-  .avatar{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
+  .avatar{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;position:relative;overflow:hidden}
+  .av-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
   .badge-new{font-size:9.5px;font-weight:800;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
   .chips{display:flex;gap:5px;flex-wrap:wrap}
   .social{display:flex;gap:10px;flex-wrap:wrap}
@@ -368,13 +369,14 @@
     var sidx=[],n=rnd(2,3);
     while(sidx.length<n){var s=rnd(0,SKILLS.length-1);if(sidx.indexOf(s)<0)sidx.push(s);}
     var sample=[];for(var v=0;v<3;v++)sample.push({pre:rnd(0,SPRE.length-1),nm:rnd(0,SNAME.length-1),rating:(4+Math.random()).toFixed(1),txt:rnd(0,REVIEWS.length-1)});
-    var pcount=rnd(4,14),works=[],rr=Math.random(),rv=rr<0.78?'approved':rr<0.94?'waiting':'rejected',isNew=Math.random()<0.28;
+    var pcount=rnd(4,14),works=[],rr=Math.random(),rv=rr<0.78?'approved':rr<0.94?'waiting':'rejected',isNew=Math.random()<0.28,gender=Math.random()<0.5?'men':'women';
     for(var w=0;w<pcount;w++)works.push({sk:pick(sidx),plat:rnd(0,PLAT.length-1),views:rnd(5,900)*1000,eng:rnd(15,130)/10,year:pick([2024,2025])});
     var subs=[],soc=[],nsoc=rnd(2,4);while(soc.length<nsoc){var si2=rnd(0,SOCIAL.length-1);if(soc.indexOf(si2)<0)soc.push(si2);}
     soc.forEach(function(si){subs.push({p:SOCIAL[si],n:(isNew?rnd(1,30):rnd(8,800))*1000});});
     creators.push({id:'c'+i,name:NICK[i%NICK.length]+(i>=NICK.length?' '+(Math.floor(i/NICK.length)+1):''),
       color:AV[i%AV.length],skillIdx:sidx,rate:rnd(2,13)*5000,rating:(4+Math.random()).toFixed(1),
-      reviews:rnd(3,60),provIdx:pick(PROVW),portfolio:pcount,grad:Math.random()<0.94,avail:Math.random()<0.8,review:rv,isNew:isNew,subs:subs,sample:sample,works:works});
+      reviews:rnd(3,60),provIdx:pick(PROVW),portfolio:pcount,grad:Math.random()<0.94,avail:Math.random()<0.8,review:rv,isNew:isNew,subs:subs,sample:sample,works:works,
+      photo:'https://randomuser.me/api/portraits/'+gender+'/'+i+'.jpg'});
   }
   var smes=[];
   for(var j=0;j<100;j++){
@@ -384,7 +386,7 @@
       catIdx:rnd(0,SCAT.length-1),provIdx:0,budget:rnd(6,14)*5000,need:CONTENT_PER_SME,review:srv});
   }
   smes[0].name={th:'ครัวป้าแดง ซีฟู้ดบ้านเพ',en:'Pa Daeng Seafood, Ban Phe'}; smes[0].catIdx=0; smes[0].budget=50000; smes[0].review='approved';
-  creators[0].name='มายด์'; creators[0].skillIdx=[0,6,3]; creators[0].rate=45000; creators[0].provIdx=0; creators[0].avail=true; creators[0].rating='4.8'; creators[0].review='approved'; creators[0].isNew=false; creators[0].subs=[{p:'TikTok',n:320000},{p:'Instagram',n:85000},{p:'YouTube',n:120000}];
+  creators[0].name='มายด์'; creators[0].skillIdx=[0,6,3]; creators[0].rate=45000; creators[0].provIdx=0; creators[0].avail=true; creators[0].rating='4.8'; creators[0].review='approved'; creators[0].isNew=false; creators[0].subs=[{p:'TikTok',n:320000},{p:'Instagram',n:85000},{p:'YouTube',n:120000}]; creators[0].photo='https://randomuser.me/api/portraits/women/68.jpg';
 
   var PTITLE=[{th:'แคมเปญเปิดร้าน',en:'Grand Opening'},{th:'รีวิวเมนูใหม่',en:'New Menu Review'},{th:'โปรโมชั่นเทศกาล',en:'Festival Promo'},{th:'คอนเทนต์แบรนด์ประจำเดือน',en:'Monthly Brand Content'},{th:'ทัวร์ร้าน / สถานที่',en:'Venue Tour'},{th:'สัมภาษณ์เจ้าของธุรกิจ',en:'Owner Interview'},{th:'รีวิวสินค้าใหม่',en:'New Product Review'}];
   var projects=[],pseq=0,deals=[],dseq=0,VALS=[30000,40000,50000,60000,70000],CONF=['closed','closed','closed','closed','delivered','in_progress','in_progress','accepted'];
@@ -444,7 +446,7 @@
   }
 
   // ---------- RENDER HELPERS ----------
-  function avatar(c){return '<div class="avatar" style="background:'+c.color+'">'+esc(c.name.charAt(0))+'</div>';}
+  function avatar(c){return '<div class="avatar" style="background:'+c.color+'">'+esc(c.name.charAt(0))+(c.photo?'<img class="av-img" src="'+c.photo+'" alt="" loading="lazy">':'')+'</div>';}
   function chips(arr){return '<div class="chips">'+arr.map(function(s){return '<span class="chip">'+esc(tx(s))+'</span>';}).join('')+'</div>';}
   function pmeta(name){
     if(/tiktok/i.test(name))return PMETA.TikTok;
@@ -1007,6 +1009,7 @@
     var b=e.target.closest('[data-act]');if(b)handleAct(b);
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&state.modal){state.modal=null;renderModal();}});
+  document.addEventListener('error',function(e){var t=e.target;if(t&&t.classList&&t.classList.contains('av-img'))t.style.display='none';},true);
   function onFilter(el){var key=el.dataset.input;if(!key)return;
     if(key==='creatorId'){state.creatorId=el.value;state.page.inbox=1;render();return;}
     if(key==='contentFilter'){state.contentFilter=el.value;state.page.contents=1;render();return;}
