@@ -284,10 +284,11 @@
   .skchk input{accent-color:var(--accent)}
   .ic-svg{vertical-align:-.15em;display:inline-block;flex:none}
 
-  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;
-    background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;
-    box-shadow:var(--shadow);z-index:80;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast{position:fixed;top:18px;right:18px;transform:translateX(16px);opacity:0;
+    background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:11px;border-left:3px solid var(--accent);
+    font-size:14px;font-weight:600;box-shadow:0 10px 30px -8px rgba(0,0,0,.4);z-index:120;pointer-events:none;
+    transition:opacity .25s,transform .25s;max-width:min(360px,88vw);text-align:left}
+  #toast.show{opacity:1;transform:translateX(0)}
   footer{border-top:1px solid var(--line);padding:22px 0;text-align:center;color:var(--ink-3);font-size:12px}
 </style>
 
