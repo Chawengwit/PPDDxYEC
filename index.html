@@ -830,7 +830,7 @@
   function renderSmeList(){
     var rf=state.smeReview;
     var list=smes.filter(function(s){return rf==='all'?true:s.review===rf;});
-    var h=backBtn()+'<div class="page-head"><h2>'+L('รายการ SME','SME List')+'</h2><p>'+L('ผู้ประกอบการทั้งหมดในระบบ · กรองตามการคัดกรอง · กดชื่อเพื่อดูโปรไฟล์','All businesses · filter by screening · click a name for profile')+'</p></div>';
+    var h='<div class="page-head"><h2>'+L('รายการ SME','SME List')+'</h2><p>'+L('ผู้ประกอบการทั้งหมดในระบบ · กรองตามการคัดกรอง · กดชื่อเพื่อดูโปรไฟล์','All businesses · filter by screening · click a name for profile')+'</p></div>';
     h+=reviewFilterUI('smeReview',rf,list.length);
     if(!list.length)return h+'<div class="empty"><div class="e-ic">'+icon('search',34)+'</div><p>'+L('ไม่มี SME ตามสถานะนี้','No SMEs in this status')+'</p></div>';
     var thead='<tr><th>'+L('ธุรกิจ','Business')+'</th><th>'+L('หมวด','Category')+'</th><th>'+L('พื้นที่','Area')+'</th><th>'+L('สถานะคัดกรอง','Screening')+'</th><th class="right">'+L('งบ/ชิ้น','Budget/pc')+'</th><th class="right">'+L('คอนเทนต์','Content')+'</th></tr>';
@@ -842,7 +842,7 @@
   function renderCreatorList(){
     var rf=state.creReview;
     var list=applyRatingSort(creators.filter(function(c){return rf==='all'?true:c.review===rf;}));
-    var h=backBtn()+'<div class="page-head"><h2>'+L('รายการ Creator','Creator List')+'</h2><p>'+L('ครีเอเตอร์ทั้งหมด · กรองตามการคัดกรอง · กดชื่อเพื่อดูโปรไฟล์','All creators · filter by screening · click a name for profile')+'</p></div>';
+    var h='<div class="page-head"><h2>'+L('รายการ Creator','Creator List')+'</h2><p>'+L('ครีเอเตอร์ทั้งหมด · กรองตามการคัดกรอง · กดชื่อเพื่อดูโปรไฟล์','All creators · filter by screening · click a name for profile')+'</p></div>';
     h+=reviewFilterUI('creReview',rf,list.length);
     if(!list.length)return h+'<div class="empty"><div class="e-ic">'+icon('search',34)+'</div><p>'+L('ไม่มี Creator ตามสถานะนี้','No creators in this status')+'</p></div>';
     var thead='<tr><th>Creator</th><th>'+sortTh('เรตติ้ง','Rating')+'</th><th>'+L('สไตล์','Style')+'</th><th>'+L('พื้นที่','Area')+'</th><th>'+L('สถานะคัดกรอง','Screening')+'</th><th class="right">'+L('เรต/ชิ้น','Rate/pc')+'</th></tr>';
@@ -854,7 +854,7 @@
     var cf=state.contentFilter;
     var filtered=deals.filter(function(d){return cf==='all'?true:cf==='matched'?!!MATCHED[d.status]:d.status===cf;});
     var opts=[['matched',L('จับคู่แล้ว (Matched)','Matched')],['all',L('ทั้งหมด','All')],['applied',stName('applied')]].concat(FLOW.map(function(s){return [s,stName(s)];})).concat([['declined',stName('declined')]]);
-    var h=backBtn()+'<div class="page-head"><h2>'+L('รายการ Content','Content List')+'</h2><p>'+L('แต่ละดีล = 1 คอนเทนต์ · กรองตามสถานะ · กดเพื่อดูรายละเอียด','Each deal = one content · filter by status · click to view')+'</p></div>';
+    var h='<div class="page-head"><h2>'+L('รายการ Content','Content List')+'</h2><p>'+L('แต่ละดีล = 1 คอนเทนต์ · กรองตามสถานะ · กดเพื่อดูรายละเอียด','Each deal = one content · filter by status · click to view')+'</p></div>';
     h+='<div class="filters"><div class="field"><label>'+L('สถานะ','Status')+'</label><select data-input="contentFilter">'
       +opts.map(function(o){return '<option value="'+o[0]+'"'+(cf===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'
       +'<span class="count tnum">'+L('พบ ','')+filtered.length+L(' คอนเทนต์',' items')+'</span></div>';
@@ -908,7 +908,7 @@
 
   var TABS={sme:[['browse',['เลือก Creator','Find Creators']],['projects',['งานของฉัน','My Projects']],['profile',['โปรไฟล์','Profile']]],
     creator:[['apply',['เลือกงาน','Find Work']],['jobs',['งานของฉัน','My Jobs']],['profile',['โปรไฟล์','Profile']]],
-    admin:[['dashboard',['ภาพรวม','Overview']],['kpi',['KPI','KPI']]]};
+    admin:[['dashboard',['ภาพรวม','Overview']],['kpi',['KPI','KPI']],['smes',['SME','SME']],['creators',['Creator','Creator']],['contents',['Content','Content']]]};
 
   function currentScreen(){
     var t=state.tab[state.role];
@@ -1002,7 +1002,9 @@
   }
   document.getElementById('app').addEventListener('click',function(e){
     var b=e.target.closest('[data-act],[data-tab]');if(!b)return;
-    if(b.dataset.tab){state.tab[state.role]=b.dataset.tab;render();return;}
+    if(b.dataset.tab){var nt=b.dataset.tab;state.tab[state.role]=nt;
+      if(nt==='smes')state.smeReview='all';else if(nt==='creators')state.creReview='all';else if(nt==='contents')state.contentFilter='all';
+      if(state.page[nt]!==undefined)state.page[nt]=1;render();return;}
     handleAct(b);
   });
   document.getElementById('modal').addEventListener('click',function(e){
