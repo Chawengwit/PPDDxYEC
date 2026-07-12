@@ -268,6 +268,8 @@
   .modal-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);width:100%;max-width:760px;
     padding:26px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5);position:relative;animation:pop .2s ease}
   @media (prefers-reduced-motion:reduce){.overlay,.modal-box{animation:none}}
+  .overlay:not(.overlay-top){animation:none}
+  .overlay:not(.overlay-top) .modal-box{animation:none}
   .modal-x{position:absolute;top:14px;right:14px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
     width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:15px;line-height:1;display:grid;place-items:center}
   .modal-x:hover{color:var(--ink);background:var(--surface-2)}
@@ -337,7 +339,7 @@
   function icon(n,sz){sz=sz||16;return '<svg class="ic-svg" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[n]||'')+'</svg>';}
 
   var state={role:'sme',lang:'en',tab:{sme:'browse',creator:'apply',admin:'dashboard'},
-    smeId:'s0',creatorId:'c0',modal:null,
+    smeId:'s0',creatorId:'c0',modals:[],
     filters:{q:'',skills:[],maxRate:'',prov:''},contentFilter:'matched',ratingSort:null,smeReview:'all',creReview:'all',kpiView:'bar',
     page:{browse:1,deals:1,inbox:1,smes:1,creators:1,contents:1,pfolio:1,smedeals:1,projects:1,applyjobs:1},focusSearch:false};
   // i18n helpers
@@ -701,7 +703,7 @@
   // ---------- PROJECT DETAIL (MODAL BODY) ----------
   function teamRow(d,actions){var c=getCre(d.creatorId);
     return '<div class="deal" style="padding:11px 14px"><div class="deal-top">'+avatar(c)
-      +'<div class="deal-title">'+esc(c.name)+newBadge(c)+'<small>★ '+c.rating+' · '+esc(creSkills(c).map(tx).join(' · '))+'</small></div>'
+      +'<div class="deal-title"><button class="linkname" data-act="openStack" data-id="'+c.id+'">'+esc(c.name)+'</button>'+newBadge(c)+'<small>★ '+c.rating+' · '+esc(creSkills(c).map(tx).join(' · '))+'</small></div>'
       +sbadge(d.status)+(actions||'')+'</div></div>';
   }
   function projectModalBody(p){
@@ -935,13 +937,18 @@
     if(state.focusSearch){var sb=document.getElementById('searchBox');if(sb){sb.focus();var v=sb.value;sb.value='';sb.value=v;}state.focusSearch=false;}
     renderModal();
   }
+  function modalBody(m){
+    return m.type==='creator'?creatorModalBody(getCre(m.id)):m.type==='sme'?smeModalBody(getSme(m.id)):m.type==='project'?projectModalBody(getProj(m.id)):m.type==='newProject'?newProjectModalBody():dealModalBody(byId(deals,m.id));
+  }
   function renderModal(){
     var mount=document.getElementById('modal');
-    if(!state.modal){mount.innerHTML='';document.body.style.overflow='';return;}
+    if(!state.modals.length){mount.innerHTML='';document.body.style.overflow='';return;}
     document.body.style.overflow='hidden';
-    var body=state.modal.type==='creator'?creatorModalBody(getCre(state.modal.id)):state.modal.type==='sme'?smeModalBody(getSme(state.modal.id)):state.modal.type==='project'?projectModalBody(getProj(state.modal.id)):state.modal.type==='newProject'?newProjectModalBody():dealModalBody(byId(deals,state.modal.id));
-    mount.innerHTML='<div id="overlay" class="overlay"><div class="modal-box" role="dialog" aria-modal="true">'
-      +'<button class="modal-x" data-act="closeModal" aria-label="'+L('ปิด','Close')+'">✕</button>'+body+'</div></div>';
+    var html='';
+    for(var i=0;i<state.modals.length;i++){var top=i===state.modals.length-1;
+      html+='<div class="overlay'+(top?' overlay-top':'')+'"'+(top?' id="overlay"':'')+' style="z-index:'+(90+i*3)+'"><div class="modal-box" role="dialog" aria-modal="true">'
+        +'<button class="modal-x" data-act="closeModal" aria-label="'+L('ปิด','Close')+'">✕</button>'+modalBody(state.modals[i])+'</div></div>';}
+    mount.innerHTML=html;
   }
   function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2600);}
   // shared actions
@@ -949,7 +956,7 @@
     var sel=document.getElementById('inviteProj'),projId=sel?sel.value:(projects.filter(function(p){return p.smeId===state.smeId;})[0]||{}).id;
     if(!projId){toast(L('ยังไม่มีโปรเจกต์','No project'));return;}
     deals.push({id:'d'+(dseq++),projectId:projId,smeId:state.smeId,creatorId:c.id,value:getSme(state.smeId).budget,status:'invited',entry:'invite'});
-    state.creatorId=c.id;state.modal=null;state.tab.sme='projects';
+    state.creatorId=c.id;state.modals=[];state.tab.sme='projects';
     toast(L('ส่งคำเชิญถึง ','Invitation sent to ')+c.name+L(' แล้ว','')); render();}
   function actCreateProject(){
     var t=(document.getElementById('npTitle').value||'').trim();
@@ -959,7 +966,7 @@
     if(!skills.length){toast(L('เลือกสไตล์อย่างน้อย 1 อย่าง','Pick at least one style'));return;}
     if(budget<1000||need<1){toast(L('กรอกงบและจำนวนให้ถูกต้อง','Enter valid budget & count'));return;}
     projects.push({id:'p'+(pseq++),smeId:state.smeId,title:{th:t,en:t},briefIdx:skills,budget:budget,need:Math.min(need,20)});
-    state.modal=null;state.tab.sme='projects';state.page.projects=1;
+    state.modals=[];state.tab.sme='projects';state.page.projects=1;
     toast(L('สร้างโปรเจกต์แล้ว','Project created')); render();}
   function actApply(projId){var c=getCre(state.creatorId),p=getProj(projId);
     if(deals.some(function(d){return d.projectId===projId&&d.creatorId===c.id&&d.status!=='declined';})){toast(L('สมัครโปรเจกต์นี้ไปแล้ว','Already applied'));return;}
@@ -970,23 +977,24 @@
     render();}
 
   // ---------- EVENTS ----------
-  document.getElementById('roles').addEventListener('click',function(e){var b=e.target.closest('button[data-role]');if(!b)return;state.role=b.dataset.role;state.modal=null;render();});
+  document.getElementById('roles').addEventListener('click',function(e){var b=e.target.closest('button[data-role]');if(!b)return;state.role=b.dataset.role;state.modals=[];render();});
   document.getElementById('lang').addEventListener('click',function(e){var b=e.target.closest('button[data-lang]');if(!b)return;state.lang=b.dataset.lang;render();});
   function handleAct(b){
     var a=b.dataset.act;
-    if(a==='open'){state.page.pfolio=1;state.modal={type:'creator',id:b.dataset.id};renderModal();}
-    else if(a==='openSme'){state.page.smedeals=1;state.modal={type:'sme',id:b.dataset.id};renderModal();}
-    else if(a==='openDeal'){state.modal={type:'deal',id:b.dataset.id};renderModal();}
-    else if(a==='openProject'){state.modal={type:'project',id:b.dataset.id};renderModal();}
-    else if(a==='newProject'){state.modal={type:'newProject'};renderModal();}
+    if(a==='open'){state.page.pfolio=1;state.modals=[{type:'creator',id:b.dataset.id}];renderModal();}
+    else if(a==='openStack'){state.page.pfolio=1;state.modals.push({type:'creator',id:b.dataset.id});renderModal();}
+    else if(a==='openSme'){state.page.smedeals=1;state.modals=[{type:'sme',id:b.dataset.id}];renderModal();}
+    else if(a==='openDeal'){state.modals=[{type:'deal',id:b.dataset.id}];renderModal();}
+    else if(a==='openProject'){state.modals=[{type:'project',id:b.dataset.id}];renderModal();}
+    else if(a==='newProject'){state.modals=[{type:'newProject'}];renderModal();}
     else if(a==='createProject'){actCreateProject();}
     else if(a==='apply'){actApply(b.dataset.id);}
     else if(a==='kpiView'){state.kpiView=b.dataset.v;render();}
     else if(a==='go'){var g=b.dataset.go;
       if(b.dataset.fkey){var fk=b.dataset.fkey,fv=b.dataset.fval;
         if(fk==='smeReview')state.smeReview=fv;else if(fk==='creReview')state.creReview=fv;else if(fk==='contentFilter')state.contentFilter=fv;}
-      state.tab.admin=g;if(state.page[g]!==undefined)state.page[g]=1;state.modal=null;render();}
-    else if(a==='closeModal'){state.modal=null;renderModal();}
+      state.tab.admin=g;if(state.page[g]!==undefined)state.page[g]=1;state.modals=[];render();}
+    else if(a==='closeModal'){state.modals.pop();renderModal();}
     else if(a==='invite'){actInvite(b.dataset.id);}
     else if(a==='deal'){actDeal(b.dataset.deal,b.dataset.to);}
     else if(a==='page'){
@@ -1008,10 +1016,10 @@
     handleAct(b);
   });
   document.getElementById('modal').addEventListener('click',function(e){
-    if(e.target.id==='overlay'){state.modal=null;renderModal();return;}
+    if(e.target.id==='overlay'){state.modals.pop();renderModal();return;}
     var b=e.target.closest('[data-act]');if(b)handleAct(b);
   });
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&state.modal){state.modal=null;renderModal();}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&state.modals.length){state.modals.pop();renderModal();}});
   document.addEventListener('error',function(e){var t=e.target;if(t&&t.classList&&t.classList.contains('av-img'))t.style.display='none';},true);
   function onFilter(el){var key=el.dataset.input;if(!key)return;
     if(key==='creatorId'){state.creatorId=el.value;state.page.inbox=1;render();return;}
