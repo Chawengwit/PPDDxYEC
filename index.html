@@ -29,10 +29,12 @@
   .logo{display:flex;align-items:center;gap:9px;font-weight:850;letter-spacing:-.02em;font-size:17px;white-space:nowrap}
   .logo .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(150deg,var(--accent),var(--accent-2));
     display:grid;place-items:center;color:#fff;font-size:15px}
-  .seg{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px}
+  .seg{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px;position:relative}
   .seg button{border:0;background:transparent;color:var(--ink-2);font-weight:700;font-size:13.5px;padding:7px 15px;
-    border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px}
-  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent-ink);box-shadow:var(--shadow-sm)}
+    border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;z-index:1;transition:color .2s}
+  .seg button[aria-pressed="true"]{color:var(--accent-ink)}
+  .seg-slider{position:absolute;top:4px;bottom:4px;left:0;width:0;background:var(--surface);border-radius:999px;
+    box-shadow:var(--shadow-sm);z-index:0;transition:transform .28s cubic-bezier(.4,0,.2,1),width .28s cubic-bezier(.4,0,.2,1)}
   .seg .ic{font-size:14px}
   .lang button{padding:7px 12px;font-size:13px}
   .grow{margin-left:auto}
@@ -40,11 +42,13 @@
   .persona b{color:var(--ink)}
   @media(max-width:760px){.persona{display:none}.seg button{padding:7px 11px}}
 
-  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:0 0 22px}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:0 0 22px;position:relative}
   .tabs button{border:0;background:transparent;color:var(--ink-2);font-weight:700;font-size:14px;padding:12px 15px;
-    cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;white-space:nowrap}
-  .tabs button[aria-pressed="true"]{color:var(--accent-ink);border-bottom-color:var(--accent)}
+    cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .2s}
+  .tabs button[aria-pressed="true"]{color:var(--accent-ink)}
   .tabs button:hover{color:var(--ink)}
+  .tab-slider{position:absolute;bottom:-1px;left:0;width:0;height:2.5px;background:var(--accent);border-radius:2px;z-index:1;
+    transition:transform .28s cubic-bezier(.4,0,.2,1),width .28s cubic-bezier(.4,0,.2,1)}
 
   main{padding:24px 0 70px;min-height:70vh}
   .page-head{margin-bottom:20px}
@@ -298,6 +302,7 @@
   <div class="nav">
     <div class="logo"><span class="mark">◑</span>PPDDxYEC</div>
     <div class="seg" id="roles">
+      <span class="seg-slider"></span>
       <button data-role="sme" aria-pressed="true"><span class="ic"><svg class="ic-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg></span>SME</button>
       <button data-role="creator" aria-pressed="false"><span class="ic"><svg class="ic-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l1.2-3.6a1 1 0 0 1 .95-.68h12.7a1 1 0 0 1 .95.68L21 9"/><path d="M7 5.2 5.8 9M12 4.8 10.8 9M17 4.8 15.8 9"/></svg></span>Creator</button>
       <button data-role="admin" aria-pressed="false"><span class="ic"><svg class="ic-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><rect x="5" y="12" width="3" height="6"/><rect x="10.5" y="7" width="3" height="11"/><rect x="16" y="10" width="3" height="8"/></svg></span>Admin</button>
@@ -305,6 +310,7 @@
     <div class="grow"></div>
     <div class="persona" id="persona"></div>
     <div class="seg lang" id="lang">
+      <span class="seg-slider"></span>
       <button data-lang="th" aria-pressed="true">TH</button>
       <button data-lang="en" aria-pressed="false">EN</button>
     </div>
@@ -929,14 +935,39 @@
     if(state.role==='sme')pe.innerHTML=L('บทบาท:','Role:')+' <b>'+esc(tx(getSme(state.smeId).name))+'</b>';
     else if(state.role==='creator')pe.innerHTML=L('บทบาท:','Role:')+' <b>'+esc(getCre(state.creatorId).name)+'</b>';
     else pe.innerHTML=L('บทบาท:','Role:')+' <b>'+L('ผู้ดูแลระบบ','Administrator')+'</b>';
-    var h='<div class="tabs">'+TABS[state.role].map(function(t){
+    var h='<div class="tabs"><span class="tab-slider"></span>'+TABS[state.role].map(function(t){
       return '<button data-tab="'+t[0]+'" aria-pressed="'+(state.tab[state.role]===t[0])+'">'+L(t[1][0],t[1][1])+'</button>';}).join('')+'</div>';
     h+=currentScreen();
     document.getElementById('app').innerHTML=h;
     document.getElementById('foot').textContent=L('PPDDxYEC · Prototype สำหรับ Demo Day — ข้อมูลเป็นตัวอย่างจำลอง รีเฟรชเพื่อรีเซ็ต · PPDD × YEC ระยอง','PPDDxYEC · Demo Day prototype — sample data, refresh to reset · PPDD × YEC Rayong');
     if(state.focusSearch){var sb=document.getElementById('searchBox');if(sb){sb.focus();var v=sb.value;sb.value='';sb.value=v;}state.focusSearch=false;}
     renderModal();
+    positionSliders();
   }
+  function positionSliders(){
+    ['roles','lang'].forEach(function(id){
+      var c=document.getElementById(id);if(!c)return;
+      var s=c.querySelector('.seg-slider'),a=c.querySelector('button[aria-pressed="true"]');
+      if(!s||!a)return;
+      if(!state._segReady)s.style.transition='none';
+      s.style.width=a.offsetWidth+'px';s.style.transform='translateX('+a.offsetLeft+'px)';
+      if(!state._segReady){void s.offsetWidth;s.style.transition='';}
+    });
+    state._segReady=true;
+    var ts=document.querySelector('.tab-slider'),ta=document.querySelector('.tabs button[aria-pressed="true"]');
+    if(ts&&ta){
+      var nl=ta.offsetLeft,nw=ta.offsetWidth,anim='transform .28s cubic-bezier(.4,0,.2,1),width .28s cubic-bezier(.4,0,.2,1)';
+      if(state._tabPos&&state._tabPos.l!==nl){
+        ts.style.transition='none';ts.style.transform='translateX('+state._tabPos.l+'px)';ts.style.width=state._tabPos.w+'px';
+        void ts.offsetWidth;ts.style.transition=anim;
+        ts.style.transform='translateX('+nl+'px)';ts.style.width=nw+'px';
+      }else{
+        ts.style.transition='none';ts.style.transform='translateX('+nl+'px)';ts.style.width=nw+'px';void ts.offsetWidth;ts.style.transition=anim;
+      }
+      state._tabPos={l:nl,w:nw};
+    }
+  }
+  window.addEventListener('resize',function(){state._segReady=false;state._tabPos=null;positionSliders();});
   function modalBody(m){
     return m.type==='creator'?creatorModalBody(getCre(m.id)):m.type==='sme'?smeModalBody(getSme(m.id)):m.type==='project'?projectModalBody(getProj(m.id)):m.type==='newProject'?newProjectModalBody():dealModalBody(byId(deals,m.id));
   }
@@ -977,7 +1008,7 @@
     render();}
 
   // ---------- EVENTS ----------
-  document.getElementById('roles').addEventListener('click',function(e){var b=e.target.closest('button[data-role]');if(!b)return;state.role=b.dataset.role;state.modals=[];render();});
+  document.getElementById('roles').addEventListener('click',function(e){var b=e.target.closest('button[data-role]');if(!b)return;state.role=b.dataset.role;state.modals=[];state._tabPos=null;render();});
   document.getElementById('lang').addEventListener('click',function(e){var b=e.target.closest('button[data-lang]');if(!b)return;state.lang=b.dataset.lang;render();});
   function handleAct(b){
     var a=b.dataset.act;
